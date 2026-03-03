@@ -4,10 +4,15 @@
   <p><strong>Trade Skills. Save Money.</strong></p>
 
   <p>
+    <a href="https://skillswap-4tg3.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-Online-00c6ff?style=for-the-badge&logo=vercel" alt="Website" /></a>
+    <a href="https://github.com/Yashika-28/skillswap/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge" alt="License: MIT" /></a>
+  </p>
+
+  <p>
     <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
     <img src="https://img.shields.io/badge/react%20router-CA4245?style=for-the-badge&logo=react-router&logoColor=white" alt="React Router" />
     <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="NodeJS" />
-    <img src="https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white" alt="NPM" />
+    <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white" alt="Socket.io" />
   </p>
 </div>
 
@@ -15,6 +20,8 @@
 
 ## 🚀 Overview
 **SkillSwap** is a community-driven platform designed for students and professionals to trade their skills without exchanging money. Instead of paying for expensive courses, you can find someone who knows what you want to learn, and teach them a skill you excel at in return.
+
+**🌍 Live Demo:** [https://skillswap-4tg3.vercel.app/](https://skillswap-4tg3.vercel.app/)
 
 ## ✨ Features
 - **Skill Discovery**: Browse and search through comprehensive student profiles categorized by their offered and desired skills.
@@ -47,7 +54,7 @@ To run this project locally, make sure you have [Node.js](https://nodejs.org/) i
 
 1. **Clone the repository** (if not already local):
    ```bash
-   git clone https://github.com/your-username/skillswap.git
+   git clone https://github.com/Yashika-28/skillswap.git
    cd skillswap
    ```
 
@@ -69,7 +76,7 @@ To run this project locally, make sure you have [Node.js](https://nodejs.org/) i
 
 ## 🤝 Contributing
 Contributions, issues, and feature requests are welcome!
-Feel free to check out the [issues page](https://github.com/your-username/skillswap/issues) if you want to contribute.
+Feel free to check out the [issues page](https://github.com/Yashika-28/skillswap/issues) if you want to contribute.
 
 ## 📝 License
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/Yashika-28/skillswap/blob/main/LICENSE) file for more information.
