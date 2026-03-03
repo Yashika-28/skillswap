@@ -14,54 +14,10 @@ export const MOCK_USER = {
 };
 
 export const MOCK_FRIENDS = [
-    {
-        id: "f1",
-        name: "Nikhil Mehta",
-        role: "React Specialist",
-        course: "B.Tech CSE",
-        avatar: "N",
-        avatarColor: "#6C63FF",
-        skillsOffered: ["React", "TypeScript", "Redux"],
-        skillsWanted: ["Machine Learning", "Django"],
-        rating: 4.9,
-        online: true,
-    },
-    {
-        id: "f2",
-        name: "Priya Agarwal",
-        role: "ML Engineer",
-        course: "B.Tech AI",
-        avatar: "P",
-        avatarColor: "#00c6ff",
-        skillsOffered: ["Python", "TensorFlow", "Data Science"],
-        skillsWanted: ["React", "Node.js"],
-        rating: 4.7,
-        online: false,
-    },
-    {
-        id: "f3",
-        name: "Aarav Singh",
-        role: "DevOps Engineer",
-        course: "B.Tech IT",
-        avatar: "A",
-        avatarColor: "#2ecc71",
-        skillsOffered: ["Docker", "Kubernetes", "AWS"],
-        skillsWanted: ["UI/UX Design", "Figma"],
-        rating: 4.6,
-        online: true,
-    },
-    {
-        id: "f4",
-        name: "Simran Kaur",
-        role: "UI/UX Designer",
-        course: "B.Des",
-        avatar: "S",
-        avatarColor: "#ff6b6b",
-        skillsOffered: ["Figma", "Adobe XD", "Branding"],
-        skillsWanted: ["JavaScript", "React"],
-        rating: 4.8,
-        online: false,
-    },
+    { id: "u1", name: "Nikhil Mehta", email: "nikhil@ncuindia.edu", avatar: "N", avatarColor: "#FF6B6B", role: "Frontend Dev", course: "B.Tech CSE", location: "Delhi, India", github: "github.com/nikhilm", about: "Full-stack enthusiast focusing on performant architectures.", status: "Student", experience: "2 Years", skillsOffered: ["React", "TypeScript", "Node.js"], skillsWanted: ["Python", "ML", "AWS"], online: true, rating: 4.7 },
+    { id: "u2", name: "Priya Agarwal", email: "priya@ncuindia.edu", avatar: "P", avatarColor: "#00c6ff", role: "Data Scientist", course: "B.Tech AI", location: "Noida, India", github: "github.com/priya-ai", about: "Data science and AI researcher building smart models.", status: "Student", experience: "3 Years", skillsOffered: ["Python", "Machine Learning", "Pandas"], skillsWanted: ["React", "Node.js", "Flutter"], online: false, rating: 4.9 },
+    { id: "u3", name: "Simran Kaur", email: "simran@ncuindia.edu", avatar: "S", avatarColor: "#2ecc71", role: "UI/UX Designer", course: "B.Des", location: "Chandigarh, India", github: "dribbble.com/simran", about: "UI/UX designer obsessed with pixel-perfect and accessible interfaces.", status: "Professional", experience: "1.5 Years", skillsOffered: ["Figma", "UI/UX Design", "CSS"], skillsWanted: ["JavaScript", "React"], online: true, rating: 4.6 },
+    { id: "u4", name: "Aryan Singh", email: "aryan@ncuindia.edu", avatar: "A", avatarColor: "#f5c518", role: "DevOps Engineer", course: "B.Tech ECE", location: "Gurugram, India", github: "github.com/aryan-ops", about: "DevOps specialist focused on CI/CD, Docker, and AWS.", status: "Student", experience: "2 Years", skillsOffered: ["DevOps", "Docker", "AWS", "Linux"], skillsWanted: ["React", "Python"], online: true, rating: 4.5 },
 ];
 
 export const GLOBAL_USERS = [

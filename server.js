@@ -14,40 +14,44 @@ const io = new Server(server, {
     cors: { origin: ["http://localhost:3000", "http://localhost:3001"], methods: ["GET", "POST"] },
 });
 
-/* ── USER STORE ── */
 const USERS = {
     "bhumika@ncuindia.edu": {
-        id: "u0", name: "Bhumika Sharma", password: "bhumika123",
-        avatar: "B", avatarColor: "#6C63FF", role: "B.Tech CSE", course: "CSE",
+        id: "u0", name: "Bhumika Sharma", password: "bhumika123", email: "bhumika@ncuindia.edu",
+        avatar: "B", avatarColor: "#6C63FF", role: "Software Engineer", course: "B.Tech CSE",
         location: "Gurugram, India", github: "github.com/bhumika", about: "Passionate about building scalable web applications. Open to learning and sharing knowledge.",
+        status: "Professional", experience: "4 Years",
         skillsOffered: ["React", "JavaScript", "CSS"], skillsWanted: ["Python", "Machine Learning"],
         stats: { swaps: 12, rating: 4.8, reviews: 24 },
     },
     "nikhil@ncuindia.edu": {
-        id: "u1", name: "Nikhil Mehta", password: "nikhil123",
-        avatar: "N", avatarColor: "#FF6B6B", role: "B.Tech CSE", course: "CSE",
+        id: "u1", name: "Nikhil Mehta", password: "nikhil123", email: "nikhil@ncuindia.edu",
+        avatar: "N", avatarColor: "#FF6B6B", role: "Frontend Dev", course: "B.Tech CSE",
         location: "Delhi, India", github: "github.com/nikhilm", about: "Full-stack enthusiast focusing on performant architectures.",
+        status: "Student", experience: "2 Years",
         skillsOffered: ["React", "TypeScript", "Node.js"], skillsWanted: ["Python", "ML", "AWS"],
         stats: { swaps: 8, rating: 4.7, reviews: 16 },
     },
     "priya@ncuindia.edu": {
-        id: "u2", name: "Priya Agarwal", password: "priya123",
-        avatar: "P", avatarColor: "#00c6ff", role: "B.Tech AI", course: "AI & DS",
+        id: "u2", name: "Priya Agarwal", password: "priya123", email: "priya@ncuindia.edu",
+        avatar: "P", avatarColor: "#00c6ff", role: "Data Scientist", course: "B.Tech AI",
         location: "Noida, India", github: "github.com/priya-ai", about: "Data science and AI researcher building smart models.",
+        status: "Student", experience: "3 Years",
         skillsOffered: ["Python", "Machine Learning", "Pandas"], skillsWanted: ["React", "Node.js", "Flutter"],
         stats: { swaps: 15, rating: 4.9, reviews: 30 },
     },
     "simran@ncuindia.edu": {
-        id: "u3", name: "Simran Kaur", password: "simran123",
-        avatar: "S", avatarColor: "#2ecc71", role: "B.Des", course: "Design",
+        id: "u3", name: "Simran Kaur", password: "simran123", email: "simran@ncuindia.edu",
+        avatar: "S", avatarColor: "#2ecc71", role: "UI/UX Designer", course: "B.Des",
         location: "Chandigarh, India", github: "dribbble.com/simran", about: "UI/UX designer obsessed with pixel-perfect and accessible interfaces.",
+        status: "Professional", experience: "1.5 Years",
         skillsOffered: ["Figma", "UI/UX Design", "CSS"], skillsWanted: ["JavaScript", "React"],
         stats: { swaps: 5, rating: 4.6, reviews: 10 },
     },
     "aryan@ncuindia.edu": {
-        id: "u4", name: "Aryan Singh", password: "aryan123",
-        avatar: "A", avatarColor: "#f5c518", role: "B.Tech ECE", course: "ECE",
+        id: "u4", name: "Aryan Singh", password: "aryan123", email: "aryan@ncuindia.edu",
+        avatar: "A", avatarColor: "#f5c518", role: "DevOps Engineer", course: "B.Tech ECE",
         location: "Gurugram, India", github: "github.com/aryan-ops", about: "DevOps specialist focused on CI/CD, Docker, and AWS.",
+        status: "Student", experience: "2 Years",
         skillsOffered: ["DevOps", "Docker", "AWS", "Linux"], skillsWanted: ["React", "Python"],
         stats: { swaps: 6, rating: 4.5, reviews: 12 },
     },
@@ -132,6 +136,28 @@ app.delete("/api/connections/:userId/remove/:targetId", (req, res) => {
 app.get("/api/messages/:aId/:bId", (req, res) => {
     const id = convId(req.params.aId, req.params.bId);
     res.json(messages[id] || []);
+});
+
+app.get("/api/conversations/:userId", (req, res) => {
+    const { userId } = req.params;
+    const userConvs = [];
+    Object.keys(messages).forEach(cid => {
+        if (cid.includes(userId)) {
+            const msgs = messages[cid];
+            if (msgs.length > 0) {
+                const partnerId = cid.replace(userId, "").replace("_", "");
+                userConvs.push({
+                    userId: partnerId,
+                    messages: msgs,
+                    lastMsg: msgs.at(-1)?.text,
+                    time: msgs.at(-1)?.time
+                });
+            }
+        }
+    });
+    // Sort by latest message
+    userConvs.sort((a, b) => (b.messages.at(-1)?.createdAt || 0) - (a.messages.at(-1)?.createdAt || 0));
+    res.json(userConvs);
 });
 
 app.get("/api/meetings/:userId", (req, res) => {

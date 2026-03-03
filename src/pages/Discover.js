@@ -14,6 +14,7 @@ export default function Discover() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [requestSent, setRequestSent] = useState({});
 
   const isDark = theme === "dark";
 
@@ -80,7 +81,11 @@ export default function Discover() {
             {friends.map((u) => (
               <UserCard key={u.id} user={u} isConnected card={card} isDark={isDark}
                 onMessage={() => navigate(`/dashboard/messages?user=${u.id}`)}
-                onRemove={() => removeFromNetwork(u.id)}
+                onRemove={() => {
+                  if (window.confirm(`Are you sure you want to remove ${u.name} from your network?`)) {
+                    removeFromNetwork(u.id);
+                  }
+                }}
                 onSelect={() => setSelectedUser(u)}
               />
             ))}
@@ -96,11 +101,15 @@ export default function Discover() {
             {globals.map((u) => {
               const inNet = isInNetwork(u.id);
               return (
-                <UserCard key={u.id} user={u} isConnected={inNet} card={card} isDark={isDark}
-                  onAdd={() => addToNetwork(u.id)}
-                  onRemove={() => removeFromNetwork(u.id)}
+                <UserCard key={u.id} user={u} isConnected={inNet} isRequested={requestSent[u.id]} card={card} isDark={isDark}
+                  onAdd={() => setRequestSent(r => ({ ...r, [u.id]: true }))}
+                  onRemove={() => {
+                    if (window.confirm(`Are you sure you want to remove ${u.name} from your network?`)) {
+                      removeFromNetwork(u.id);
+                    }
+                  }}
                   onMessage={() => navigate(`/dashboard/messages?user=${u.id}`)}
-                  onSwap={() => navigate(`/dashboard/messages?user=${u.id}&swap=1`)}
+                  onSwap={() => setRequestSent(r => ({ ...r, [u.id]: true }))}
                   onSelect={() => setSelectedUser(u)}
                 />
               );
@@ -126,7 +135,7 @@ const SectionHeader = ({ label, count }) => (
   </div>
 );
 
-function UserCard({ user, isConnected, card, isDark, onAdd, onRemove, onMessage, onSwap, onSelect }) {
+function UserCard({ user, isConnected, isRequested, card, isDark, onAdd, onRemove, onMessage, onSwap, onSelect }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -171,27 +180,23 @@ function UserCard({ user, isConnected, card, isDark, onAdd, onRemove, onMessage,
           <span key={s} style={S.chipWant}>{s}</span>
         ))}
       </div>
-
-      {/* Actions */}
-      <div style={S.actionRow}>
-        <button style={S.msgBtn} onClick={onMessage}>
-          <MessageSquare size={14} /> Message
-        </button>
+      <div style={{ marginTop: 20 }}>
         {isConnected ? (
-          onRemove && (
-            <button style={S.removeBtn} onClick={onRemove}>Remove</button>
-          )
+          <div style={S.actionRow}>
+            <button style={S.msgBtn} onClick={(e) => { e.stopPropagation(); onMessage(); }}><MessageSquare size={13} /> Message</button>
+            <button style={{ ...S.msgBtn, color: "#e74c3c" }} onClick={(e) => { e.stopPropagation(); onRemove(); }}><span style={{ fontSize: "1rem", lineHeight: 1 }}>×</span></button>
+          </div>
         ) : (
-          <>
-            {onAdd && (
-              <button style={S.addBtn} onClick={onAdd}>
-                <UserPlus size={14} /> Add to Network
-              </button>
+          <div style={S.actionRow}>
+            {isRequested ? (
+              <button disabled style={{ ...S.addBtn, background: "rgba(46,204,113,0.15)", color: "#2ecc71", boxShadow: "none", cursor: "default" }} onClick={(e) => e.stopPropagation()}>✓ Request Sent</button>
+            ) : (
+              <>
+                <button style={S.addBtn} onClick={(e) => { e.stopPropagation(); onAdd(); }}><UserPlus size={13} /> Add</button>
+                <button style={S.swapBtn} onClick={(e) => { e.stopPropagation(); onSwap(); }}>⇄ Swap</button>
+              </>
             )}
-            {onSwap && (
-              <button style={S.swapBtn} onClick={onSwap}>⇄ Request Swap</button>
-            )}
-          </>
+          </div>
         )}
       </div>
     </div>

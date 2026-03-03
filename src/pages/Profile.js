@@ -204,6 +204,7 @@ export default function Profile() {
                           <Video size={10} /> Join Meet
                         </a>
                       )}
+                      {m.note && <p style={{ fontSize: "0.75rem", color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.7)", marginTop: 8, fontStyle: "italic", lineHeight: 1.4 }}>"{m.note}"</p>}
                     </div>
                   </div>
                 );

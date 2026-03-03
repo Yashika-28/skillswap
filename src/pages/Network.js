@@ -48,7 +48,11 @@ export default function Network() {
                         <NetworkCard
                             key={f.id} user={f} card={card} isDark={isDark}
                             onMessage={() => navigate(`/dashboard/messages?user=${f.id}`)}
-                            onRemove={() => removeFromNetwork(f.id)}
+                            onRemove={() => {
+                                if (window.confirm(`Are you sure you want to remove ${f.name} from your network?`)) {
+                                    removeFromNetwork(f.id);
+                                }
+                            }}
                             onSelect={() => setSelectedUser(f)}
                         />
                     ))}

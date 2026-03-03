@@ -12,6 +12,17 @@ const ALL_MOCK = [...MOCK_FRIENDS, ...GLOBAL_USERS];
 
 function convId(a, b) { return [a, b].sort().join("_"); }
 
+const renderMessageWithLinks = (text) => {
+  if (!text) return null;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.split(urlRegex).map((part, i) => {
+    if (part.match(urlRegex)) {
+      return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "underline", fontWeight: 600 }}>{part}</a>;
+    }
+    return part;
+  });
+};
+
 /* ── tiny inline calendar panel ── */
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAYS_SHORT = ["S", "M", "T", "W", "T", "F", "S"];
@@ -181,6 +192,25 @@ export default function Messages() {
       .catch(() => setAllUsers(ALL_MOCK));
   }, []);
 
+  /* Fetch all ongoing conversations on mount */
+  useEffect(() => {
+    if (!authUser || allUsers.length === 0) return;
+    fetch(`${API}/api/conversations/${authUser.id}`)
+      .then(r => r.json())
+      .then(data => {
+        const built = data.map(d => ({
+          userId: d.userId,
+          user: findUser(d.userId) || { id: d.userId, name: "Unknown", avatar: "?", avatarColor: "#555" },
+          messages: d.messages,
+          lastMsg: d.lastMsg,
+          time: d.time
+        }));
+        setConvs(built);
+      })
+      .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser, allUsers.length]);
+
   /* Helper: get user object from any source */
   const findUser = useCallback((id) =>
     allUsers.find((u) => u.id === id) || ALL_MOCK.find((u) => u.id === id) || { id, name: id, avatar: "?", avatarColor: "#555" }
@@ -261,9 +291,16 @@ export default function Messages() {
     const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
     const msg = { id: `local_${Date.now()}`, from: authUser.id, to: selected.userId, text: input.trim(), time: now, createdAt: Date.now() };
 
-    // Optimistic — add once locally; socket listener will skip this (from === authUser.id guard)
-    setConvs((cs) => cs.map((c) => c.userId === selected.userId
-      ? { ...c, messages: [...c.messages, msg], lastMsg: msg.text, time: now } : c));
+    // Optimistic — append to convs if exists, else add new conv
+    setConvs((cs) => {
+      if (cs.some((c) => c.userId === selected.userId)) {
+        return cs.map((c) => c.userId === selected.userId
+          ? { ...c, messages: [...c.messages, msg], lastMsg: msg.text, time: now } : c);
+      } else {
+        return [{ userId: selected.userId, user: selected.user, messages: [msg], lastMsg: msg.text, time: now }, ...cs];
+      }
+    });
+
     setSelected((s) => ({ ...s, messages: [...(s?.messages || []), msg] }));
 
     socketSend?.(authUser.id, selected.userId, input.trim());
@@ -428,8 +465,8 @@ export default function Messages() {
                     </div>
                   )}
                   <div>
-                    <div style={{ padding: "10px 15px", borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: isMe ? "linear-gradient(135deg,#6C63FF,#00c6ff)" : (isDark ? "rgba(255,255,255,0.07)" : "rgba(108,99,255,0.07)"), color: isMe ? "#fff" : txt, maxWidth: 360, fontSize: "0.88rem", lineHeight: 1.55, boxShadow: isMe ? "0 3px 10px rgba(108,99,255,0.2)" : "none" }}>
-                      {m.text}
+                    <div style={{ padding: "10px 15px", borderRadius: isMe ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: isMe ? "linear-gradient(135deg,#6C63FF,#00c6ff)" : (isDark ? "rgba(255,255,255,0.07)" : "rgba(108,99,255,0.07)"), color: isMe ? "#fff" : txt, maxWidth: 360, fontSize: "0.88rem", lineHeight: 1.55, boxShadow: isMe ? "0 3px 10px rgba(108,99,255,0.2)" : "none", whiteSpace: "pre-wrap" }}>
+                      {renderMessageWithLinks(m.text)}
                     </div>
                     <p style={{ fontSize: "0.65rem", color: muted, marginTop: 3, textAlign: isMe ? "right" : "left" }}>{m.time}</p>
                   </div>
@@ -482,12 +519,20 @@ export default function Messages() {
               partnerUser={selected.user || findUser(selected.userId)}
               onClose={() => setShowMeetPanel(false)}
               onMeetingCreated={(mtg) => {
-                const msgText = `📅 Let's meet on ${mtg.date} at ${mtg.time}.\nJoin here: ${mtg.link}`;
+                const noteText = mtg.note ? `\nNote: ${mtg.note}` : "";
+                const msgText = `📅 Let's meet on ${mtg.date} at ${mtg.time}.${noteText}\nJoin here: ${mtg.link}`;
                 const now = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
                 const msg = { id: `local_${Date.now()}`, from: authUser.id, to: selected.userId, text: msgText, time: now, createdAt: Date.now() };
 
-                setConvs((cs) => cs.map((c) => c.userId === selected.userId
-                  ? { ...c, messages: [...c.messages, msg], lastMsg: msg.text, time: now } : c));
+                setConvs((cs) => {
+                  if (cs.some((c) => c.userId === selected.userId)) {
+                    return cs.map((c) => c.userId === selected.userId
+                      ? { ...c, messages: [...c.messages, msg], lastMsg: msg.text, time: now } : c);
+                  } else {
+                    return [{ userId: selected.userId, user: selected.user, messages: [msg], lastMsg: msg.text, time: now }, ...cs];
+                  }
+                });
+
                 setSelected((s) => ({ ...s, messages: [...(s?.messages || []), msg] }));
 
                 socketSend?.(authUser.id, selected.userId, msgText);
