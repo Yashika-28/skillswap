@@ -10,8 +10,6 @@ import UserModal from "../components/UserModal";
 const API = "http://localhost:3002";
 const ALL_MOCK = [...MOCK_FRIENDS, ...GLOBAL_USERS];
 
-function convId(a, b) { return [a, b].sort().join("_"); }
-
 const renderMessageWithLinks = (text) => {
   if (!text) return null;
   const urlRegex = /(https?:\/\/[^\s]+)/g;

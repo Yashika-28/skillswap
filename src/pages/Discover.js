@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { MOCK_FRIENDS, GLOBAL_USERS } from "../data/mockData";
 import { MapPin, GraduationCap, Star, UserPlus, MessageSquare, Check, Search } from "lucide-react";
 import UserModal from "../components/UserModal";
 
@@ -10,7 +9,7 @@ const ALL_SKILLS = ["All", "React", "Python", "ML", "Figma", "Node.js", "Flutter
 
 export default function Discover() {
   const navigate = useNavigate();
-  const { addToNetwork, removeFromNetwork, isInNetwork, theme, user, allUsers } = useAuth();
+  const { removeFromNetwork, isInNetwork, theme, user, allUsers } = useAuth();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
   const [selectedUser, setSelectedUser] = useState(null);

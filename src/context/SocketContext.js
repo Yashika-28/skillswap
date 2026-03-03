@@ -11,7 +11,7 @@ export function SocketProvider({ children }) {
     const socketRef = useRef(null);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [notifications, setNotifications] = useState([]);
-    const [messageListeners, setMessageListeners] = useState([]);
+    const [, setMessageListeners] = useState([]);
 
     useEffect(() => {
         if (!user) {
