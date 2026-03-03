@@ -1,16 +1,16 @@
-// src/pages/Network.js — My Network page
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { MOCK_FRIENDS } from "../data/mockData";
 import { MessageSquare, UserMinus, Star, MapPin, GraduationCap } from "lucide-react";
+import UserModal from "../components/UserModal";
 
 export default function Network() {
-    const { removeFromNetwork, isInNetwork, theme } = useAuth();
+    const { removeFromNetwork, isInNetwork, theme, user, allUsers } = useAuth();
     const navigate = useNavigate();
+    const [selectedUser, setSelectedUser] = React.useState(null);
     const isDark = theme === "dark";
 
-    const connectedFriends = MOCK_FRIENDS.filter((f) => isInNetwork(f.id));
+    const connectedFriends = allUsers.filter((f) => f.id !== user?.id && isInNetwork(f.id));
 
     const card = {
         background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
@@ -21,6 +21,8 @@ export default function Network() {
 
     return (
         <div style={{ padding: "36px 40px", minHeight: "100vh", color: isDark ? "#F0F0FF" : "#1A1A30", fontFamily: "'Inter',sans-serif" }}>
+            {selectedUser && <UserModal user={selectedUser} isDark={isDark} onClose={() => setSelectedUser(null)} />}
+
             <h1 style={{ fontSize: "1.9rem", fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 6, color: isDark ? "#F0F0FF" : "#1A1A30" }}>My Network</h1>
             <p style={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)", marginBottom: 36, fontSize: "0.92rem" }}>
                 {connectedFriends.length} established connection{connectedFriends.length !== 1 ? "s" : ""}
@@ -47,6 +49,7 @@ export default function Network() {
                             key={f.id} user={f} card={card} isDark={isDark}
                             onMessage={() => navigate(`/dashboard/messages?user=${f.id}`)}
                             onRemove={() => removeFromNetwork(f.id)}
+                            onSelect={() => setSelectedUser(f)}
                         />
                     ))}
                 </div>
@@ -55,13 +58,13 @@ export default function Network() {
     );
 }
 
-function NetworkCard({ user, card, isDark, onMessage, onRemove }) {
+function NetworkCard({ user, card, isDark, onMessage, onRemove, onSelect }) {
     const [hovered, setHovered] = React.useState(false);
     const muted = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)";
 
     return (
         <div
-            style={{ ...card, padding: "24px", transition: "transform 0.25s, box-shadow 0.25s", transform: hovered ? "translateY(-5px)" : "none", boxShadow: hovered ? "0 20px 48px rgba(108,99,255,0.15)" : "none", cursor: "default" }}
+            style={{ ...card, padding: "24px", transition: "transform 0.25s, box-shadow 0.25s", transform: hovered ? "translateY(-5px)" : "none", boxShadow: hovered ? "0 20px 48px rgba(108,99,255,0.15)" : "none" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
@@ -69,13 +72,13 @@ function NetworkCard({ user, card, isDark, onMessage, onRemove }) {
             <div style={{ height: 6, borderRadius: "12px 12px 0 0", background: `linear-gradient(135deg, ${user.avatarColor}, #6C63FF)`, margin: "-24px -24px 20px" }} />
 
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
-                <div style={{ position: "relative" }}>
+                <div style={{ position: "relative", cursor: "pointer" }} onClick={onSelect}>
                     <div style={{ width: 52, height: 52, borderRadius: 14, background: user.avatarColor, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#fff", fontSize: "1.1rem" }}>
                         {user.avatar}
                     </div>
                     <div style={{ position: "absolute", bottom: 0, right: -1, width: 13, height: 13, borderRadius: "50%", background: user.online ? "#2ecc71" : "#555", border: "2px solid var(--bg-surface)" }} />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, cursor: "pointer" }} onClick={onSelect}>
                     <p style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 2 }}>{user.name}</p>
                     <p style={{ fontSize: "0.8rem", color: muted, marginBottom: 4 }}>{user.role} · {user.course}</p>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>

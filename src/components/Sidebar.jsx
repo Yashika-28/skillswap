@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
     Home, Compass, MessageSquare, Users, User,
-    LogOut, Zap, Sun, Moon, Calendar, Bell,
+    LogOut, Zap, Sun, Moon, Bell,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
     { to: "/dashboard/discover", icon: Compass, label: "Discover", end: false },
     { to: "/dashboard/messages", icon: MessageSquare, label: "Messenger", end: false },
     { to: "/dashboard/network", icon: Users, label: "My Network", end: false },
-    { to: "/dashboard/schedule", icon: Calendar, label: "Schedule", end: false },
     { to: "/dashboard/profile", icon: User, label: "Profile", end: false },
 ];
 

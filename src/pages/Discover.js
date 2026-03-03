@@ -4,26 +4,29 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { MOCK_FRIENDS, GLOBAL_USERS } from "../data/mockData";
 import { MapPin, GraduationCap, Star, UserPlus, MessageSquare, Check, Search } from "lucide-react";
+import UserModal from "../components/UserModal";
 
 const ALL_SKILLS = ["All", "React", "Python", "ML", "Figma", "Node.js", "Flutter", "DevOps", "DSA", "Design"];
 
 export default function Discover() {
   const navigate = useNavigate();
-  const { addToNetwork, removeFromNetwork, isInNetwork, theme } = useAuth();
+  const { addToNetwork, removeFromNetwork, isInNetwork, theme, user, allUsers } = useAuth();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All");
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const isDark = theme === "dark";
 
   const filterUser = (u) => {
+    if (u.id === user?.id) return false;
     const q = query.toLowerCase();
     const matchQ = !q || u.name.toLowerCase().includes(q) || u.skillsOffered.some((s) => s.toLowerCase().includes(q));
     const matchF = filter === "All" || u.skillsOffered.some((s) => s.toLowerCase().includes(filter.toLowerCase()));
     return matchQ && matchF;
   };
 
-  const friends = MOCK_FRIENDS.filter(filterUser);
-  const globals = GLOBAL_USERS.filter(filterUser);
+  const friends = allUsers.filter(u => isInNetwork(u.id)).filter(filterUser);
+  const globals = allUsers.filter(u => !isInNetwork(u.id)).filter(filterUser);
 
   const card = {
     background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
@@ -33,6 +36,8 @@ export default function Discover() {
 
   return (
     <div style={{ ...S.page, color: isDark ? "#F0F0FF" : "#1A1A30" }}>
+      {selectedUser && <UserModal user={selectedUser} isDark={isDark} onClose={() => setSelectedUser(null)} />}
+
       <h1 style={{ ...S.pageTitle, color: isDark ? "#F0F0FF" : "#1A1A30" }}>Discover</h1>
       <p style={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)", marginBottom: 28 }}>
         Find your next skill exchange partner at NCU.
@@ -76,6 +81,7 @@ export default function Discover() {
               <UserCard key={u.id} user={u} isConnected card={card} isDark={isDark}
                 onMessage={() => navigate(`/dashboard/messages?user=${u.id}`)}
                 onRemove={() => removeFromNetwork(u.id)}
+                onSelect={() => setSelectedUser(u)}
               />
             ))}
           </div>
@@ -95,6 +101,7 @@ export default function Discover() {
                   onRemove={() => removeFromNetwork(u.id)}
                   onMessage={() => navigate(`/dashboard/messages?user=${u.id}`)}
                   onSwap={() => navigate(`/dashboard/messages?user=${u.id}&swap=1`)}
+                  onSelect={() => setSelectedUser(u)}
                 />
               );
             })}
@@ -119,7 +126,7 @@ const SectionHeader = ({ label, count }) => (
   </div>
 );
 
-function UserCard({ user, isConnected, card, isDark, onAdd, onRemove, onMessage, onSwap }) {
+function UserCard({ user, isConnected, card, isDark, onAdd, onRemove, onMessage, onSwap, onSelect }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -134,11 +141,11 @@ function UserCard({ user, isConnected, card, isDark, onAdd, onRemove, onMessage,
       onMouseLeave={() => setHovered(false)}
     >
       <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", cursor: "pointer" }} onClick={onSelect}>
           <div style={{ ...S.avatar, background: user.avatarColor }}>{user.avatar}</div>
           <div style={{ ...S.onlineDot, background: user.online ? "#2ecc71" : "#555" }} />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={onSelect}>
           <p style={{ fontWeight: 700, fontSize: "0.98rem", marginBottom: 2 }}>{user.name}</p>
           <p style={{ fontSize: "0.78rem", color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)", marginBottom: 6 }}>{user.role}</p>
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>

@@ -1,6 +1,6 @@
 // src/context/AuthContext.js — updated to call real backend
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { MOCK_FRIENDS } from "../data/mockData";
+import { MOCK_FRIENDS, GLOBAL_USERS } from "../data/mockData";
 
 const AuthContext = createContext(null);
 const API = "http://localhost:3002";
@@ -9,7 +9,8 @@ const DEMO_FALLBACK = {
   id: "u0", name: "Bhumika Sharma",
   email: "bhumika@ncuindia.edu",
   avatar: "B", avatarColor: "#6C63FF",
-  role: "B.Tech CSE",
+  role: "B.Tech CSE", course: "CSE",
+  location: "Gurugram, India", github: "github.com/bhumika", about: "Passionate about building scalable web applications.",
   skillsOffered: ["React", "JavaScript", "CSS"],
   skillsWanted: ["Python", "Machine Learning"],
   stats: { swaps: 12, rating: 4.8, reviews: 24 },
@@ -23,6 +24,14 @@ export function AuthProvider({ children }) {
   const [network, setNetwork] = useState(() => {
     try { return JSON.parse(localStorage.getItem("ss_network")) || MOCK_FRIENDS.map((f) => f.id); } catch { return []; }
   });
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API}/api/users`)
+      .then((r) => r.json())
+      .then(setAllUsers)
+      .catch(() => setAllUsers([...MOCK_FRIENDS, ...GLOBAL_USERS]));
+  }, []);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -36,6 +45,22 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (user) localStorage.setItem("ss_user", JSON.stringify(user));
     else localStorage.removeItem("ss_user");
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const handleConnUpdate = (e) => {
+      const { userId, targetId, connected } = e.detail;
+      if (userId !== user.id && targetId !== user.id) return;
+      const otherId = userId === user.id ? targetId : userId;
+      setNetwork((n) => {
+        if (connected && !n.includes(otherId)) return [...n, otherId];
+        if (!connected && n.includes(otherId)) return n.filter(id => id !== otherId);
+        return n;
+      });
+    };
+    window.addEventListener("ss_connection_update", handleConnUpdate);
+    return () => window.removeEventListener("ss_connection_update", handleConnUpdate);
   }, [user]);
 
   // Try real backend first, fall back to demo mode
@@ -93,6 +118,7 @@ export function AuthProvider({ children }) {
       user, login, logout, signup,
       theme, toggleTheme,
       network, addToNetwork, removeFromNetwork, isInNetwork,
+      allUsers,
     }}>
       {children}
     </AuthContext.Provider>

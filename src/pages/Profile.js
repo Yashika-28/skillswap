@@ -1,10 +1,12 @@
-// src/pages/Profile.js — Glassmorphic Profile page
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   Edit2, Save, Camera, Github, Linkedin, Mail,
-  Briefcase, Star, X, Plus,
+  Briefcase, Star, X, Plus, Calendar, Clock, User, Video,
 } from "lucide-react";
+
+const API = "http://localhost:3002";
+const MONTHS_S = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function Profile() {
   const { user: authUser, theme } = useAuth();
@@ -21,6 +23,24 @@ export default function Profile() {
   });
   const [newOffer, setNewOffer] = useState("");
   const [newWant, setNewWant] = useState("");
+  const [meetings, setMeetings] = useState([]);
+
+  useEffect(() => {
+    if (!authUser?.id) return;
+    fetch(`${API}/api/meetings/${authUser.id}`)
+      .then((r) => r.json())
+      .then((data) => setMeetings(data.sort((a, b) => a.date?.localeCompare(b.date)).slice(0, 5)))
+      .catch(() => {
+        // demo data when server offline
+        const today = new Date();
+        const pad = (n) => String(n).padStart(2, "0");
+        const f = (d) => `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate() + d)}`;
+        setMeetings([
+          { id: "d1", title: "React ↔ Python Swap", with: "Nikhil Mehta", date: f(3), time: "15:00" },
+          { id: "d2", title: "ML Study Session", with: "Priya Agarwal", date: f(6), time: "11:00" },
+        ]);
+      });
+  }, [authUser]);
 
   const set = (f) => (e) => setUser({ ...user, [f]: e.target.value });
 
@@ -151,8 +171,50 @@ export default function Profile() {
           />
         </div>
       </div>
+
+      {/* ── Upcoming Sessions ── */}
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 56px" }}>
+        <div style={{ ...card, padding: "22px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+            <Calendar size={17} color="#6C63FF" />
+            <h2 style={{ fontSize: "1rem", fontWeight: 700, color: txt }}>Upcoming Sessions</h2>
+          </div>
+          {meetings.length === 0 ? (
+            <p style={{ color: muted, fontSize: "0.85rem", textAlign: "center", padding: "12px 0" }}>
+              No upcoming sessions. Schedule one from the Messenger!
+            </p>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 12 }}>
+              {meetings.map((m) => {
+                const parts = m.date?.split("-") || [];
+                const dayNum = parts[2] ? parseInt(parts[2]) : "—";
+                const monIdx = parts[1] ? parseInt(parts[1]) - 1 : 0;
+                return (
+                  <div key={m.id} style={{ padding: "14px", borderRadius: 14, background: isDark ? "rgba(108,99,255,0.07)" : "rgba(108,99,255,0.05)", border: "1px solid rgba(108,99,255,0.18)", display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 10, background: "linear-gradient(135deg,rgba(108,99,255,0.2),rgba(0,198,255,0.12))", border: "1px solid rgba(108,99,255,0.25)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <span style={{ fontSize: "0.56rem", fontWeight: 700, color: "#9B8FFF", textTransform: "uppercase", lineHeight: 1 }}>{MONTHS_S[monIdx]}</span>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 800, color: "#6C63FF", lineHeight: 1.3 }}>{dayNum}</span>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: "0.83rem", color: txt, marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.title || "Skill Session"}</p>
+                      {m.with && <p style={{ fontSize: "0.71rem", color: muted, display: "flex", alignItems: "center", gap: 4 }}><User size={10} />{m.with}</p>}
+                      {m.time && <p style={{ fontSize: "0.71rem", color: muted, display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}><Clock size={10} />{m.time}</p>}
+                      {m.link && (
+                        <a href={m.link} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 6, background: "rgba(46,204,113,0.1)", border: "1px solid rgba(46,204,113,0.3)", color: "#2ecc71", fontSize: "0.65rem", fontWeight: 700, textDecoration: "none", marginTop: 6, transition: "background 0.2s" }}>
+                          <Video size={10} /> Join Meet
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
+
 }
 
 function SkillSection({ title, color, chipStyle, skills, editing, newVal, onNewChange, onAdd, onRemove, card, isDark, muted }) {

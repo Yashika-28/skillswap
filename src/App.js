@@ -10,7 +10,6 @@ import Discover from "./pages/Discover";
 import Messages from "./pages/Messages";
 import Network from "./pages/Network";
 import Profile from "./pages/Profile";
-import Schedule from "./pages/Schedule";
 
 export default function App() {
   return (
@@ -24,7 +23,6 @@ export default function App() {
           <Route path="/dashboard/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
           <Route path="/dashboard/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
           <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/dashboard/schedule" element={<ProtectedRoute><Schedule /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
