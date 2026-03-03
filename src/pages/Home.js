@@ -1,286 +1,219 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { Users, Zap, Shield, ArrowRight, Search, Calendar, Award } from "lucide-react";
+// src/pages/Home.js  — Dashboard Feed (post-login)
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { SUGGESTED_SWAPS } from "../data/mockData";
+import { Check, X, TrendingUp, Bell, Star, Zap } from "lucide-react";
 
 export default function Home() {
-  
-  const scrollToHowItWorks = () => {
-    const section = document.getElementById("how-it-works");
-    if (section) {
-      section.scrollIntoView({ behavior: "smooth" });
-    }
+  const { user, theme } = useAuth();
+  const [swaps, setSwaps] = useState(SUGGESTED_SWAPS);
+  const [accepted, setAccepted] = useState([]);
+
+  const dismiss = (id) => setSwaps((s) => s.filter((sw) => sw.id !== id));
+  const accept = (id) => {
+    setAccepted((a) => [...a, id]);
+    setTimeout(() => dismiss(id), 900);
+  };
+
+  const isDark = theme === "dark";
+  const card = {
+    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
+    border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(108,99,255,0.15)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    borderRadius: 18,
   };
 
   return (
-    <div style={styles.container}>
-      
-      {/* --- HERO SECTION --- */}
-      <header style={styles.hero}>
-        <div style={styles.heroContent}>
-          
-          {/* REMOVED: The Badge <div> was here */}
+    <div style={{ ...S.page, color: isDark ? "#F0F0FF" : "#1A1A30", background: "var(--bg-base)" }}>
 
-          <h1 style={styles.heroTitle}>
-            Trade Skills. <br />
-            <span style={styles.gradientText}>Save Money.</span>
-          </h1>
-          
-          <p style={styles.heroSubtitle}>
-            Don't pay for courses. Find a student who knows what you want to learn, 
-            and teach them what you know in return.
+      {/* Header */}
+      <div style={S.header}>
+        <div>
+          <p style={{ fontSize: "0.82rem", color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)", marginBottom: 4 }}>
+            {new Date().toLocaleDateString("en-IN", { weekday: "long", month: "long", day: "numeric" })}
           </p>
-
-          <div style={styles.btnGroup}>
-            {/* Added textDecoration: 'none' to remove underline */}
-            <Link to="/discover" style={{ textDecoration: 'none' }}>
-              <button style={styles.btnPrimary}>
-                Find a Swap <ArrowRight size={18} />
-              </button>
-            </Link>
-            
-            <button style={styles.btnSecondary} onClick={scrollToHowItWorks}>
-              How it Works
-            </button>
-          </div>
-          </div>
-      </header>
-
-      {/* --- HOW IT WORKS SECTION --- */}
-      <section id="how-it-works" style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Simple 3-Step Process</h2>
-          <p style={styles.sectionSub}>Everything you need to know to get started.</p>
+          <h1 style={{ ...S.greeting, color: isDark ? "#F0F0FF" : "#1A1A30" }}>
+            Good {getTimeOfDay()}, <span style={S.gradientName}>{firstName(user?.name)}</span> 👋
+          </h1>
+          <p style={{ color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)", fontSize: "0.92rem" }}>
+            You have <b style={{ color: "#6C63FF" }}>{swaps.length}</b> new swap suggestions waiting.
+          </p>
         </div>
+        <button style={S.notifBtn}>
+          <Bell size={18} />
+          <span style={S.notifDot} />
+        </button>
+      </div>
 
-        <div style={styles.stepGrid}>
-          <StepCard 
-            step="01"
-            icon={<Search size={28} color="#00c6ff" />} 
-            title="Discover" 
-            desc="Search for the skill you want to learn. Browse profiles of students who offer it." 
-          />
-          <StepCard 
-            step="02"
-            icon={<Calendar size={28} color="#FFD700" />} 
-            title="Request Swap" 
-            desc="Send a swap request. Propose a skill you can teach in return." 
-          />
-          <StepCard 
-            step="03"
-            icon={<Award size={28} color="#ff4d4d" />} 
-            title="Learn & Earn" 
-            desc="Connect via video/chat. Complete the session and earn 'Skill Credits' for your profile." 
-          />
-        </div>
-      </section>
+      {/* Stats bar */}
+      <div style={{ ...S.statsBar, ...card }}>
+        {[
+          { label: "Swaps Done", value: user?.stats?.swaps ?? 3, icon: <Zap size={16} color="#6C63FF" /> },
+          { label: "Rating", value: `${user?.stats?.rating ?? 4.5} ★`, icon: <Star size={16} color="#f5c518" /> },
+          { label: "Network", value: "4 friends", icon: <TrendingUp size={16} color="#2ecc71" /> },
+        ].map((s) => (
+          <div key={s.label} style={S.statItem}>
+            {s.icon}
+            <span style={{ fontSize: "1.4rem", fontWeight: 800 }}>{s.value}</span>
+            <span style={{ fontSize: "0.75rem", color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
 
-      {/* --- CALL TO ACTION --- */}
-      <section style={styles.ctaSection}>
-        <h2 style={styles.ctaTitle}>Ready to upgrade your skills?</h2>
-        <Link to="/login" style={{ textDecoration: 'none' }}>
-          <button style={styles.btnCta}>Join Community Now</button>
-        </Link>
-      </section>
+      {/* Swap Feed */}
+      <h2 style={{ ...S.sectionH, color: isDark ? "#F0F0FF" : "#1A1A30" }}>
+        <Zap size={20} color="#6C63FF" fill="#6C63FF" /> Suggested Swaps
+      </h2>
+
+      <div style={S.feedGrid}>
+        {swaps.length === 0 ? (
+          <div style={{ ...card, padding: "60px 32px", textAlign: "center", gridColumn: "1 / -1", color: "rgba(255,255,255,0.3)" }}>
+            <p style={{ fontSize: "2rem" }}>🎉</p>
+            <p style={{ marginTop: 12 }}>You've reviewed all swap suggestions for today!</p>
+          </div>
+        ) : (
+          swaps.map((sw) => {
+            const isAccepted = accepted.includes(sw.id);
+            return (
+              <div
+                key={sw.id}
+                style={{
+                  ...card, padding: "24px",
+                  transition: "all 0.4s ease",
+                  opacity: isAccepted ? 0 : 1,
+                  transform: isAccepted ? "scale(0.95) translateY(-8px)" : "none",
+                  border: isAccepted ? "1px solid rgba(46,204,113,0.4)" : card.border,
+                  background: isAccepted ? (isDark ? "rgba(46,204,113,0.08)" : "rgba(46,204,113,0.05)") : card.background,
+                }}
+              >
+                {/* User info */}
+                <div style={S.swapUserRow}>
+                  <div style={{ ...S.avatar, background: sw.from.avatarColor }}>
+                    {sw.from.avatar}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 700, fontSize: "0.98rem" }}>{sw.from.name}</p>
+                    <p style={{ fontSize: "0.78rem", color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.45)" }}>{sw.from.role} · {sw.from.course}</p>
+                  </div>
+                  <div style={{ ...S.matchScore, color: matchColor(sw.matchScore), background: `${matchColor(sw.matchScore)}15`, border: `1px solid ${matchColor(sw.matchScore)}30` }}>
+                    {sw.matchScore}% match
+                  </div>
+                </div>
+
+                {/* Swap chips */}
+                <div style={S.swapChips}>
+                  <span style={S.chipOffer}>🎓 Offers: {sw.offer}</span>
+                  <span style={S.swapArrow}>⇄</span>
+                  <span style={S.chipWant}>✦ Wants: {sw.want}</span>
+                </div>
+
+                {/* Message */}
+                <p style={{ ...S.swapMsg, color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)" }}>
+                  "{sw.message}"
+                </p>
+
+                {/* Date + actions */}
+                <div style={S.swapFooter}>
+                  <span style={{ fontSize: "0.75rem", color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.35)" }}>{sw.date}</span>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button style={S.skipBtn} onClick={() => dismiss(sw.id)}>
+                      <X size={15} /> Skip
+                    </button>
+                    <button style={S.acceptBtn} onClick={() => accept(sw.id)}>
+                      <Check size={15} /> Accept Swap
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
 
     </div>
   );
 }
 
-// --- HELPER COMPONENTS ---
+function firstName(name = "") { return name.split(" ")[0] || "there"; }
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return "morning";
+  if (h < 17) return "afternoon";
+  return "evening";
+}
+function matchColor(score) {
+  if (score >= 90) return "#2ecc71";
+  if (score >= 75) return "#f5c518";
+  return "#e74c3c";
+}
 
-const StatItem = ({ number, label }) => (
-  <div style={styles.statItem}>
-    <h3 style={{fontSize: "1.5rem", fontWeight: "bold", margin: 0}}>{number}</h3>
-    <p style={{fontSize: "0.85rem", color: "#888", margin: 0}}>{label}</p>
-  </div>
-);
-
-const StepCard = ({ step, icon, title, desc }) => (
-  <div style={styles.stepCard}>
-    <div style={styles.stepNumber}>{step}</div>
-    <div style={styles.iconBox}>{icon}</div>
-    <h3 style={styles.stepTitle}>{title}</h3>
-    <p style={styles.stepDesc}>{desc}</p>
-  </div>
-);
-
-// --- STYLES ---
-
-const styles = {
-  container: {
-    background: "#0f0f13",
-    minHeight: "100vh",
-    fontFamily: "'Inter', sans-serif",
-    color: "#fff",
-    paddingBottom: "80px",
+const S = {
+  page: { padding: "36px 40px", minHeight: "100vh" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 },
+  greeting: { fontSize: "1.9rem", fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 6 },
+  gradientName: {
+    background: "linear-gradient(135deg,#6C63FF,#00c6ff)", WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent", backgroundClip: "text",
   },
-  hero: {
-    padding: "80px 20px 100px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    background: "radial-gradient(circle at 50% 20%, #1a1a2e 0%, #0f0f13 70%)",
+  notifBtn: {
+    position: "relative", width: 42, height: 42, borderRadius: "50%",
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    cursor: "pointer", color: "#F0F0FF",
   },
-  heroTitle: {
-    fontSize: "3.8rem",
-    fontWeight: "800",
-    lineHeight: "1.1",
-    marginBottom: "25px",
-    letterSpacing: "-1px",
+  notifDot: {
+    position: "absolute", top: 8, right: 8, width: 8, height: 8,
+    borderRadius: "50%", background: "#e74c3c", border: "2px solid var(--bg-base)",
   },
-  gradientText: {
-    background: "linear-gradient(90deg, #00c6ff, #0072ff)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
+  statsBar: {
+    display: "flex", gap: 0, marginBottom: 40,
+    overflow: "hidden",
   },
-  heroSubtitle: {
-    fontSize: "1.2rem",
-    color: "#aaa",
-    maxWidth: "600px",
-    margin: "0 auto 40px",
-    lineHeight: "1.6",
+  statItem: {
+    flex: 1, display: "flex", flexDirection: "column", alignItems: "center",
+    gap: 4, padding: "20px 16px",
+    borderRight: "1px solid rgba(255,255,255,0.06)",
   },
-  btnGroup: {
-    display: "flex",
-    gap: "15px",
-    justifyContent: "center",
-    marginBottom: "60px",
+  sectionH: {
+    fontSize: "1.2rem", fontWeight: 700, marginBottom: 20,
+    display: "flex", alignItems: "center", gap: 8,
   },
-  btnPrimary: {
-    padding: "15px 32px",
-    background: "linear-gradient(135deg, #00c6ff 0%, #0072ff 100%)",
-    border: "none",
-    borderRadius: "30px",
-    color: "#fff",
-    fontSize: "1rem",
-    fontWeight: "700",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    boxShadow: "0 10px 30px rgba(0, 198, 255, 0.25)",
-    transition: "transform 0.2s",
+  feedGrid: {
+    display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 20,
   },
-  btnSecondary: {
-    padding: "15px 32px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: "30px",
-    color: "#fff",
-    fontSize: "1rem",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background 0.2s",
+  swapUserRow: { display: "flex", alignItems: "center", gap: 12, marginBottom: 16 },
+  avatar: {
+    width: 44, height: 44, borderRadius: 12,
+    display: "flex", alignItems: "center", justifyContent: "center",
+    fontWeight: 700, color: "#fff", fontSize: "1rem", flexShrink: 0,
   },
-  statsRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "40px",
-    padding: "20px 50px",
-    background: "rgba(255,255,255,0.03)",
-    borderRadius: "20px",
-    border: "1px solid rgba(255,255,255,0.05)",
-    backdropFilter: "blur(10px)",
+  matchScore: {
+    padding: "4px 10px", borderRadius: 99, fontSize: "0.72rem",
+    fontWeight: 700, whiteSpace: "nowrap",
   },
-  statDivider: {
-    width: "1px",
-    height: "40px",
-    background: "rgba(255,255,255,0.1)",
+  swapChips: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 14 },
+  chipOffer: {
+    padding: "5px 12px", borderRadius: 99, fontSize: "0.78rem", fontWeight: 500,
+    background: "rgba(0,198,255,0.12)", color: "#00c6ff", border: "1px solid rgba(0,198,255,0.25)",
   },
-  
-  /* How It Works Section */
-  section: {
-    padding: "80px 20px",
-    maxWidth: "1200px",
-    margin: "0 auto",
+  chipWant: {
+    padding: "5px 12px", borderRadius: 99, fontSize: "0.78rem", fontWeight: 500,
+    background: "rgba(108,99,255,0.12)", color: "#9B8FFF", border: "1px solid rgba(108,99,255,0.25)",
   },
-  sectionHeader: {
-    textAlign: "center",
-    marginBottom: "60px",
+  swapArrow: { fontSize: "1.1rem", color: "rgba(255,255,255,0.3)" },
+  swapMsg: { fontSize: "0.88rem", lineHeight: 1.6, fontStyle: "italic", marginBottom: 18 },
+  swapFooter: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+  skipBtn: {
+    display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8,
+    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+    color: "rgba(255,255,255,0.55)", fontWeight: 500, fontSize: "0.82rem", cursor: "pointer",
+    fontFamily: "'Inter',sans-serif",
   },
-  sectionTitle: {
-    fontSize: "2.5rem",
-    fontWeight: "700",
-    marginBottom: "10px",
+  acceptBtn: {
+    display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8,
+    background: "linear-gradient(135deg,#6C63FF,#00c6ff)", border: "none",
+    color: "#fff", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer",
+    fontFamily: "'Inter',sans-serif", boxShadow: "0 4px 14px rgba(108,99,255,0.3)",
   },
-  sectionSub: {
-    color: "#888",
-    fontSize: "1.1rem",
-  },
-  stepGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-    gap: "30px",
-  },
-  stepCard: {
-    background: "#16161a",
-    padding: "40px 30px",
-    borderRadius: "24px",
-    border: "1px solid rgba(255,255,255,0.05)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-    position: "relative",
-    transition: "transform 0.3s",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-  },
-  stepNumber: {
-    position: "absolute",
-    top: "20px",
-    right: "20px",
-    fontSize: "3rem",
-    fontWeight: "900",
-    color: "rgba(255,255,255,0.03)",
-    zIndex: 0,
-  },
-  iconBox: {
-    width: "70px",
-    height: "70px",
-    background: "rgba(255,255,255,0.05)",
-    borderRadius: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: "25px",
-    zIndex: 1,
-  },
-  stepTitle: {
-    fontSize: "1.4rem",
-    marginBottom: "15px",
-    fontWeight: "700",
-    zIndex: 1,
-  },
-  stepDesc: {
-    color: "#aaa",
-    lineHeight: "1.6",
-    fontSize: "0.95rem",
-    zIndex: 1,
-  },
-
-  /* CTA Section */
-  ctaSection: {
-    textAlign: "center",
-    padding: "80px 20px",
-    background: "linear-gradient(180deg, rgba(0, 198, 255, 0.05) 0%, transparent 100%)",
-    marginTop: "40px",
-  },
-  ctaTitle: {
-    fontSize: "2rem",
-    fontWeight: "700",
-    marginBottom: "30px",
-  },
-  btnCta: {
-    padding: "18px 40px",
-    background: "#fff",
-    color: "#000",
-    border: "none",
-    borderRadius: "40px",
-    fontSize: "1.1rem",
-    fontWeight: "800",
-    cursor: "pointer",
-    boxShadow: "0 10px 30px rgba(255,255,255,0.15)",
-    transition: "transform 0.2s",
-  }
 };

@@ -1,437 +1,202 @@
+// src/pages/Profile.js — Glassmorphic Profile page
 import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import {
-  Edit2,
-  Save,
-  MapPin,
-  Mail,
-  Github,
-  Linkedin,
-  Camera,
-  Briefcase,
-  Star,
-  Repeat
+  Edit2, Save, Camera, Github, Linkedin, Mail,
+  Briefcase, Star, X, Plus,
 } from "lucide-react";
 
 export default function Profile() {
+  const { user: authUser, theme } = useAuth();
+  const isDark = theme === "dark";
+
   const [editing, setEditing] = useState(false);
-
-  // Expanded mock data for a "SkillSwap" context
   const [user, setUser] = useState({
-    name: "Bhumika",
-    tagline: "B.Tech CSE | Full Stack Developer",
+    name: authUser?.name || "Bhumika Sharma",
+    tagline: "B.Tech CSE '25 · Full Stack Developer",
     bio: "Passionate about building scalable web applications. I love teaching React and looking to trade knowledge for advanced Python backend skills.",
-    skillsOffered: ["React", "JavaScript", "UI/UX Design", "CSS"],
-    skillsWanted: ["Python", "Machine Learning", "AWS"],
-    stats: {
-      swaps: 12,
-      rating: 4.8,
-      reviews: 24
-    }
+    skillsOffered: authUser?.skillsOffered?.length ? authUser.skillsOffered : ["React", "JavaScript", "UI/UX Design", "CSS"],
+    skillsWanted: authUser?.skillsWanted?.length ? authUser.skillsWanted : ["Python", "Machine Learning", "AWS"],
+    stats: authUser?.stats || { swaps: 12, rating: 4.8, reviews: 24 },
   });
+  const [newOffer, setNewOffer] = useState("");
+  const [newWant, setNewWant] = useState("");
 
-  const toggleEdit = () => setEditing(!editing);
+  const set = (f) => (e) => setUser({ ...user, [f]: e.target.value });
+
+  const addSkill = (type) => {
+    const val = type === "offer" ? newOffer.trim() : newWant.trim();
+    if (!val) return;
+    if (type === "offer") { setUser({ ...user, skillsOffered: [...user.skillsOffered, val] }); setNewOffer(""); }
+    else { setUser({ ...user, skillsWanted: [...user.skillsWanted, val] }); setNewWant(""); }
+  };
+  const removeSkill = (type, skill) => {
+    if (type === "offer") setUser({ ...user, skillsOffered: user.skillsOffered.filter((s) => s !== skill) });
+    else setUser({ ...user, skillsWanted: user.skillsWanted.filter((s) => s !== skill) });
+  };
+
+  const txt = isDark ? "#F0F0FF" : "#1A1A30";
+  const muted = isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
+  const card = {
+    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)",
+    border: isDark ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(108,99,255,0.13)",
+    backdropFilter: "blur(12px)",
+    borderRadius: 20,
+    padding: "28px",
+  };
 
   return (
-    <div style={styles.container}>
-      
-      {/* --- Cover Photo --- */}
-      <div style={styles.coverPhoto}>
-        <button style={styles.coverEditBtn}>
-          <Camera size={16} color="#fff" />
-          <span style={{ marginLeft: 5 }}>Change Cover</span>
+    <div style={{ minHeight: "100vh", color: txt, fontFamily: "'Inter',sans-serif", paddingBottom: 60 }}>
+      {/* Cover */}
+      <div style={{ height: 180, background: "linear-gradient(135deg, #6C63FF 0%, #00c6ff 100%)", position: "relative", display: "flex", alignItems: "flex-end", justifyContent: "flex-end", padding: 20 }}>
+        <button style={{ background: "rgba(0,0,0,0.4)", border: "none", borderRadius: 20, padding: "7px 14px", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: "0.82rem", backdropFilter: "blur(8px)", fontFamily: "'Inter',sans-serif" }}>
+          <Camera size={14} /> Change Cover
         </button>
       </div>
 
-      <div style={styles.contentWrapper}>
-        
-        {/* --- Profile Header Card --- */}
-        <div style={styles.card}>
-          <div style={styles.headerTop}>
-            {/* Avatar - Negative margin to pull it up */}
-            <div style={styles.avatarWrapper}>
-              <div style={styles.avatar}>
-                {user.name[0]}
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
+        {/* Profile header card */}
+        <div style={{ ...card, marginTop: -60, position: "relative" }}>
+          {/* Avatar */}
+          <div style={{ position: "relative", width: 110, height: 110, marginTop: -80, marginBottom: 16, zIndex: 2 }}>
+            <div style={{ width: "100%", height: "100%", borderRadius: 22, background: `linear-gradient(135deg, #6C63FF, #00c6ff)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.8rem", fontWeight: 700, color: "#fff", border: "4px solid var(--bg-surface)", boxShadow: "0 8px 24px rgba(108,99,255,0.4)" }}>
+              {user.name[0]}
+            </div>
+            {editing && (
+              <div style={{ position: "absolute", inset: 0, borderRadius: 22, background: "rgba(0,0,0,0.55)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                <Camera size={20} color="#fff" />
               </div>
-              {editing && <div style={styles.editOverlay}><Camera size={20} /></div>}
-            </div>
-
-            {/* Action Buttons */}
-            <div style={styles.actionButtons}>
-              <button style={styles.btnPrimary} onClick={toggleEdit}>
-                {editing ? (
-                  <><Save size={16} /> Save Profile</>
-                ) : (
-                  <><Edit2 size={16} /> Edit Profile</>
-                )}
-              </button>
-            </div>
+            )}
           </div>
 
-          {/* User Details */}
-          <div style={styles.infoSection}>
-            {editing ? (
-              <input
-                style={styles.inputName}
-                value={user.name}
-                onChange={(e) => setUser({ ...user, name: e.target.value })}
-              />
-            ) : (
-              <h1 style={styles.name}>{user.name}</h1>
-            )}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div style={{ flex: 1 }}>
+              {editing ? (
+                <input style={{ ...inputStyle(isDark), fontSize: "1.6rem", fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 8 }} value={user.name} onChange={set("name")} />
+              ) : (
+                <h1 style={{ fontSize: "1.9rem", fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 4 }}>{user.name}</h1>
+              )}
+              {editing ? (
+                <input style={{ ...inputStyle(isDark), color: muted }} value={user.tagline} onChange={set("tagline")} />
+              ) : (
+                <p style={{ color: muted, fontSize: "0.95rem", marginBottom: 16 }}>{user.tagline}</p>
+              )}
 
-            {editing ? (
-              <input
-                style={styles.inputTagline}
-                value={user.tagline}
-                onChange={(e) => setUser({ ...user, tagline: e.target.value })}
-              />
-            ) : (
-              <p style={styles.tagline}>{user.tagline}</p>
-            )}
-
-            <div style={styles.metaRow}>
-              <div style={styles.metaItem}>
-                <MapPin size={14} color="#888" />
-                <span>{user.location}</span>
+              {/* Meta */}
+              <div style={{ display: "flex", gap: 20, color: muted, fontSize: "0.85rem", marginBottom: 16 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Briefcase size={13} /> Student / Freelancer</span>
+                <span style={{ display: "flex", alignItems: "center", gap: 5 }}><Mail size={13} /> {authUser?.email || "bhumika@ncuindia.edu"}</span>
               </div>
-              <div style={styles.metaItem}>
-                <Briefcase size={14} color="#888" />
-                <span>Student / Freelancer</span>
+
+              {/* Social icons */}
+              <div style={{ display: "flex", gap: 8 }}>
+                {[Github, Linkedin, Mail].map((Icon, i) => (
+                  <div key={i} style={{ width: 34, height: 34, borderRadius: 9, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(108,99,255,0.08)", border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(108,99,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                    <Icon size={16} />
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* Social Links */}
-            <div style={styles.socialRow}>
-              <SocialIcon icon={<Github size={18} />} />
-              <SocialIcon icon={<Linkedin size={18} />} />
-              <SocialIcon icon={<Mail size={18} />} />
-            </div>
+            <button
+              style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px", borderRadius: 10, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(108,99,255,0.1)", border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(108,99,255,0.2)", color: isDark ? "#F0F0FF" : "#6C63FF", fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif", fontSize: "0.88rem" }}
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? <><Save size={15} /> Save</> : <><Edit2 size={15} /> Edit Profile</>}
+            </button>
+          </div>
 
-            {/* Stats Bar */}
-            <div style={styles.statsBar}>
-              <div style={styles.statItem}>
-                <span style={styles.statNum}>{user.stats.swaps}</span>
-                <span style={styles.statLabel}>Swaps</span>
+          {/* Stats bar */}
+          <div style={{ display: "flex", gap: 0, marginTop: 24, background: isDark ? "rgba(255,255,255,0.03)" : "rgba(108,99,255,0.05)", borderRadius: 14, overflow: "hidden", border: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(108,99,255,0.1)" }}>
+            {[
+              { label: "Swaps Done", val: user.stats.swaps },
+              { label: "Rating", val: <span style={{ display: "flex", alignItems: "center", gap: 4 }}>{user.stats.rating} <Star size={13} fill="#f5c518" color="#f5c518" /></span> },
+              { label: "Reviews", val: user.stats.reviews },
+            ].map((s, i) => (
+              <div key={s.label} style={{ flex: 1, textAlign: "center", padding: "16px 8px", borderRight: i < 2 ? (isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(108,99,255,0.1)") : "none" }}>
+                <div style={{ fontSize: "1.5rem", fontWeight: 800, marginBottom: 3 }}>{s.val}</div>
+                <div style={{ fontSize: "0.72rem", color: muted, textTransform: "uppercase", letterSpacing: "1px" }}>{s.label}</div>
               </div>
-              <div style={styles.divider} />
-              <div style={styles.statItem}>
-                <span style={styles.statNum}>{user.stats.rating} <Star size={12} fill="#FFD700" color="#FFD700"/></span>
-                <span style={styles.statLabel}>Rating</span>
-              </div>
-              <div style={styles.divider} />
-              <div style={styles.statItem}>
-                <span style={styles.statNum}>{user.stats.reviews}</span>
-                <span style={styles.statLabel}>Reviews</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* --- About Section --- */}
-        <div style={styles.card}>
-          <h3 style={styles.sectionTitle}>About Me</h3>
+        {/* About section */}
+        <div style={{ ...card, marginTop: 20 }}>
+          <h3 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(108,99,255,0.1)" }}>About Me</h3>
           {editing ? (
-            <textarea
-              style={styles.textArea}
-              value={user.bio}
-              onChange={(e) => setUser({ ...user, bio: e.target.value })}
-            />
+            <textarea style={{ ...inputStyle(isDark), width: "100%", minHeight: 90, resize: "vertical", lineHeight: 1.6 }} value={user.bio} onChange={set("bio")} />
           ) : (
-            <p style={styles.bioText}>{user.bio}</p>
+            <p style={{ color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.6)", lineHeight: 1.7, fontSize: "0.95rem" }}>{user.bio}</p>
           )}
         </div>
 
-        {/* --- Skill Swap Section --- */}
-        <div style={styles.row}>
-          
-          {/* Skills Offered */}
-          <div style={{...styles.card, flex: 1}}>
-            <h3 style={{...styles.sectionTitle, color: "#00c6ff"}}>
-               Skills I Teach 
-            </h3>
-            <div style={styles.skillGrid}>
-              {user.skillsOffered.map((skill, i) => (
-                <span key={i} style={styles.skillChipOffered}>{skill}</span>
-              ))}
-              {editing && <button style={styles.addSkillBtn}>+ Add</button>}
-            </div>
-          </div>
-
-          {/* Skills Wanted */}
-          <div style={{...styles.card, flex: 1}}>
-            <h3 style={{...styles.sectionTitle, color: "#ff007a"}}>
-               Skills I Want 
-            </h3>
-            <div style={styles.skillGrid}>
-              {user.skillsWanted.map((skill, i) => (
-                <span key={i} style={styles.skillChipWanted}>{skill}</span>
-              ))}
-              {editing && <button style={styles.addSkillBtn}>+ Add</button>}
-            </div>
-          </div>
-
+        {/* Skills row */}
+        <div style={{ display: "flex", gap: 20, marginTop: 20, flexWrap: "wrap" }}>
+          {/* Skills I Teach */}
+          <SkillSection
+            title="Skills I Teach" color="#00c6ff" chipStyle="offer"
+            skills={user.skillsOffered} editing={editing}
+            newVal={newOffer} onNewChange={(e) => setNewOffer(e.target.value)}
+            onAdd={() => addSkill("offer")} onRemove={(s) => removeSkill("offer", s)}
+            card={card} isDark={isDark} muted={muted}
+          />
+          {/* Skills I Want */}
+          <SkillSection
+            title="Skills I Want" color="#9B8FFF" chipStyle="want"
+            skills={user.skillsWanted} editing={editing}
+            newVal={newWant} onNewChange={(e) => setNewWant(e.target.value)}
+            onAdd={() => addSkill("want")} onRemove={(s) => removeSkill("want", s)}
+            card={card} isDark={isDark} muted={muted}
+          />
         </div>
-
       </div>
     </div>
   );
 }
 
-// Helper Component for Social Icons
-const SocialIcon = ({ icon }) => (
-  <div style={styles.socialIcon}>
-    {icon}
-  </div>
-);
+function SkillSection({ title, color, chipStyle, skills, editing, newVal, onNewChange, onAdd, onRemove, card, isDark, muted }) {
+  const bg = chipStyle === "offer" ? "rgba(0,198,255,0.12)" : "rgba(108,99,255,0.12)";
+  const border = chipStyle === "offer" ? "1px solid rgba(0,198,255,0.25)" : "1px solid rgba(108,99,255,0.25)";
+  return (
+    <div style={{ ...card, flex: 1, minWidth: 240 }}>
+      <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 14, paddingBottom: 10, borderBottom: isDark ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(108,99,255,0.1)", color }}>
+        {title}
+      </h3>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: editing ? 14 : 0 }}>
+        {skills.map((s) => (
+          <span key={s} style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 99, fontSize: "0.82rem", fontWeight: 500, background: bg, color, border }}>
+            {s}
+            {editing && <button style={{ background: "transparent", border: "none", cursor: "pointer", color, padding: 0, display: "flex" }} onClick={() => onRemove(s)}><X size={12} /></button>}
+          </span>
+        ))}
+      </div>
+      {editing && (
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            style={{ ...inputStyle(isDark), flex: 1, padding: "8px 12px", fontSize: "0.85rem" }}
+            placeholder="Add skill..."
+            value={newVal}
+            onChange={onNewChange}
+            onKeyDown={(e) => e.key === "Enter" && onAdd()}
+          />
+          <button style={{ width: 34, height: 34, borderRadius: 9, background: `${color}20`, border: `1px solid ${color}40`, color, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onAdd}>
+            <Plus size={16} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
-/* --- Styles --- */
-const styles = {
-  container: {
-    minHeight: "100vh",
-    background: "#0f0f13",
-    color: "#fff",
-    fontFamily: "'Inter', sans-serif",
-    paddingBottom: "50px",
-  },
-  coverPhoto: {
-    height: "200px",
-    width: "100%",
-    background: "linear-gradient(90deg, #00c6ff 0%, #0072ff 100%)",
-    position: "relative",
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "flex-end",
-    padding: "20px",
-  },
-  coverEditBtn: {
-    background: "rgba(0,0,0,0.5)",
-    border: "none",
-    color: "#fff",
-    padding: "8px 12px",
-    borderRadius: "20px",
-    display: "flex",
-    alignItems: "center",
-    cursor: "pointer",
-    backdropFilter: "blur(5px)",
-  },
-  contentWrapper: {
-    maxWidth: "900px",
-    margin: "0 auto",
-    padding: "0 20px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "20px",
-    marginTop: "-60px", // Pulls content up over cover
-  },
-  card: {
-    background: "#1e1e22",
-    borderRadius: "16px",
-    padding: "25px",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-    border: "1px solid rgba(255,255,255,0.05)",
-    position: "relative",
-  },
-  headerTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: "15px",
-  },
-  avatarWrapper: {
-    position: "relative",
-    marginTop: "-75px", // Pulls avatar up
-  },
-  avatar: {
-    width: "130px",
-    height: "130px",
-    borderRadius: "50%",
-    background: "#222",
-    border: "4px solid #1e1e22",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    fontSize: "3rem",
-    fontWeight: "bold",
-    color: "#fff",
-    boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-  },
-  editOverlay: {
-    position: "absolute",
-    inset: 0,
-    background: "rgba(0,0,0,0.6)",
-    borderRadius: "50%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    cursor: "pointer",
-    border: "4px solid #1e1e22",
-  },
-  actionButtons: {
-    marginTop: "10px",
-  },
-  btnPrimary: {
-    background: "#00c6ff",
-    color: "#000",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "8px",
-    fontWeight: "600",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    transition: "0.2s",
-  },
-  infoSection: {
-    textAlign: "left",
-  },
-  name: {
-    fontSize: "2rem",
-    margin: "0 0 5px 0",
-    fontWeight: "700",
-  },
-  inputName: {
-    fontSize: "2rem",
-    background: "transparent",
-    border: "none",
-    borderBottom: "2px solid #00c6ff",
-    color: "#fff",
-    outline: "none",
-    width: "100%",
-    marginBottom: "5px",
-    fontWeight: "700",
-  },
-  tagline: {
-    color: "#aaa",
-    fontSize: "1.1rem",
-    margin: "0 0 15px 0",
-  },
-  inputTagline: {
-    background: "transparent",
-    border: "none",
-    borderBottom: "1px solid #555",
-    color: "#aaa",
-    outline: "none",
-    width: "100%",
-    fontSize: "1.1rem",
-    marginBottom: "15px",
-  },
-  metaRow: {
-    display: "flex",
-    gap: "20px",
-    marginBottom: "20px",
-    color: "#888",
-    fontSize: "0.9rem",
-  },
-  metaItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-  },
-  socialRow: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "25px",
-  },
-  socialIcon: {
-    width: "36px",
-    height: "36px",
-    borderRadius: "50%",
-    background: "rgba(255,255,255,0.05)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    cursor: "pointer",
-    color: "#fff",
-    transition: "background 0.2s",
-  },
-  statsBar: {
-    display: "flex",
-    background: "rgba(255,255,255,0.03)",
-    padding: "15px",
-    borderRadius: "12px",
-    justifyContent: "space-around",
-    alignItems: "center",
-  },
-  statItem: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  statNum: {
-    fontSize: "1.2rem",
-    fontWeight: "bold",
-    display: "flex",
-    alignItems: "center",
-    gap: "5px",
-  },
-  statLabel: {
-    fontSize: "0.8rem",
-    color: "#888",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
-    marginTop: "2px",
-  },
-  divider: {
-    width: "1px",
-    height: "30px",
-    background: "rgba(255,255,255,0.1)",
-  },
-  sectionTitle: {
-    fontSize: "1.2rem",
-    marginBottom: "15px",
-    fontWeight: "600",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-    paddingBottom: "10px",
-  },
-  bioText: {
-    lineHeight: "1.6",
-    color: "#ccc",
-  },
-  textArea: {
-    width: "100%",
-    height: "100px",
-    background: "rgba(0,0,0,0.2)",
-    border: "1px solid #333",
-    borderRadius: "8px",
-    color: "#fff",
-    padding: "10px",
-    outline: "none",
-    resize: "vertical",
-  },
-  row: {
-    display: "flex",
-    gap: "20px",
-    flexWrap: "wrap",
-  },
-  skillGrid: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "10px",
-  },
-  skillChipOffered: {
-    background: "rgba(0,198,255,0.15)",
-    color: "#00c6ff",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    fontSize: "0.9rem",
-    border: "1px solid rgba(0,198,255,0.2)",
-  },
-  skillChipWanted: {
-    background: "rgba(255, 0, 122, 0.15)",
-    color: "#ff007a",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    fontSize: "0.9rem",
-    border: "1px solid rgba(255, 0, 122, 0.2)",
-  },
-  addSkillBtn: {
-    background: "transparent",
-    border: "1px dashed #555",
-    color: "#888",
-    padding: "8px 16px",
-    borderRadius: "20px",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-  },
-};
+function inputStyle(isDark) {
+  return {
+    width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: "0.92rem",
+    background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+    border: isDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(108,99,255,0.2)",
+    color: isDark ? "#F0F0FF" : "#1A1A30", outline: "none",
+    fontFamily: "'Inter',sans-serif", boxSizing: "border-box",
+    transition: "border-color 0.2s",
+    display: "block",
+  };
+}

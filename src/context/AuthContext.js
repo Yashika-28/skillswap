@@ -1,46 +1,102 @@
-// src/context/AuthContext.js
-import React, { createContext, useContext, useEffect, useState } from "react";
+// src/context/AuthContext.js — updated to call real backend
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { MOCK_FRIENDS } from "../data/mockData";
 
-const AuthContext = createContext();
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext(null);
+const API = "http://localhost:3002";
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() =>
-    JSON.parse(localStorage.getItem("loggedInUser")) || null
-  );
+const DEMO_FALLBACK = {
+  id: "u0", name: "Bhumika Sharma",
+  email: "bhumika@ncuindia.edu",
+  avatar: "B", avatarColor: "#6C63FF",
+  role: "B.Tech CSE",
+  skillsOffered: ["React", "JavaScript", "CSS"],
+  skillsWanted: ["Python", "Machine Learning"],
+  stats: { swaps: 12, rating: 4.8, reviews: 24 },
+};
 
-  const [users, setUsers] = useState(() =>
-    JSON.parse(localStorage.getItem("users")) || []
-  );
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("ss_user")) || null; } catch { return null; }
+  });
+  const [theme, setTheme] = useState(() => localStorage.getItem("ss_theme") || "dark");
+  const [network, setNetwork] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("ss_network")) || MOCK_FRIENDS.map((f) => f.id); } catch { return []; }
+  });
 
-  const signup = (newUser) => {
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("ss_theme", theme);
+  }, [theme]);
 
-    // auto login after signup
-    setUser(newUser);
-    localStorage.setItem("loggedInUser", JSON.stringify(newUser));
-  };
+  useEffect(() => {
+    localStorage.setItem("ss_network", JSON.stringify(network));
+  }, [network]);
 
-  const login = (email, password) => {
-    const foundUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
-    if (!foundUser) return false;
-    setUser(foundUser);
-    localStorage.setItem("loggedInUser", JSON.stringify(foundUser));
-    return true;
+  useEffect(() => {
+    if (user) localStorage.setItem("ss_user", JSON.stringify(user));
+    else localStorage.removeItem("ss_user");
+  }, [user]);
+
+  // Try real backend first, fall back to demo mode
+  const login = async (email, password) => {
+    try {
+      const res = await fetch(`${API}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        // Load network from server
+        const connRes = await fetch(`${API}/api/connections/${data.user.id}`);
+        if (connRes.ok) setNetwork(await connRes.json());
+        return { ok: true };
+      } else {
+        const err = await res.json();
+        return { ok: false, error: err.error };
+      }
+    } catch {
+      // Server offline → demo login (any credentials)
+      if (email && password && password.length >= 4) {
+        const fallback = { ...DEMO_FALLBACK, email, name: email.split("@")[0] };
+        setUser(fallback);
+        return { ok: true, demo: true };
+      }
+      return { ok: false, error: "Server offline. Use any email + password (4+ chars) for demo." };
+    }
   };
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("loggedInUser");
+    localStorage.removeItem("ss_user");
   };
 
+  const signup = (newUser) => {
+    setUser(newUser);
+  };
+
+  const toggleTheme = () =>
+    setTheme((t) => (t === "dark" ? "light" : "dark"));
+
+  const addToNetwork = (id) =>
+    setNetwork((n) => (n.includes(id) ? n : [...n, id]));
+
+  const removeFromNetwork = (id) =>
+    setNetwork((n) => n.filter((x) => x !== id));
+
+  const isInNetwork = (id) => network.includes(id);
+
   return (
-    <AuthContext.Provider value={{ user, users, signup, login, logout }}>
+    <AuthContext.Provider value={{
+      user, login, logout, signup,
+      theme, toggleTheme,
+      network, addToNetwork, removeFromNetwork, isInNetwork,
+    }}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
+
+export const useAuth = () => useContext(AuthContext);

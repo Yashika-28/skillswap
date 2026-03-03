@@ -1,7 +1,7 @@
 // ...existing code...
 import React, { useState } from "react";
 import { Check } from "lucide-react";
-import { styles } from "../styles";
+import { styles } from "../utils/styles";
 
 export default function Skills() {
   const [selected, setSelected] = useState([]);

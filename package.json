@@ -12,6 +12,8 @@
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.9.6",
     "react-scripts": "5.0.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -39,6 +41,23 @@
     ]
   },
   "devDependencies": {
-    "json-server": "^1.0.0-beta.3"
-  }
+    "autoprefixer": "^10.4.27",
+    "json-server": "^1.0.0-beta.3",
+    "postcss": "^8.5.8",
+    "source-map-loader": "^5.0.0",
+    "tailwindcss": "^4.2.1"
+  },
+  "description": "<div align=\"center\">   <img src=\"https://img.shields.io/badge/Skill-Swap-00c6ff?style=for-the-badge&logoColor=white\" alt=\"SkillSwap\" style=\"margin-bottom: 20px\" />   <h1>SkillSwap</h1>   <p><strong>Trade Skills. Save Money.</strong></p>",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yashika-28/skillswap.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yashika-28/skillswap/issues"
+  },
+  "homepage": "/"
 }
