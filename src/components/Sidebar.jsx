@@ -18,13 +18,18 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
     const { user, logout, theme, toggleTheme } = useAuth();
-    const { notifications } = useSocket() || { notifications: [] };
+    const { notifications, acceptRequest, clearNotification } = useSocket() || { notifications: [] };
     const navigate = useNavigate();
     const [showNotifs, setShowNotifs] = useState(false);
 
     const unreadCount = notifications?.filter((n) => !n.read).length || 0;
 
     const handleLogout = () => { logout(); navigate("/"); };
+
+    const handleAccept = (n) => {
+        acceptRequest?.(n.id, user?.id);
+        clearNotification?.(n.id);
+    };
 
     return (
         <aside style={sidebarStyle(theme)}>
@@ -56,11 +61,19 @@ export default function Sidebar() {
                             <span style={{ background: "#e74c3c", color: "#fff", borderRadius: 99, fontSize: "0.68rem", fontWeight: 700, padding: "2px 7px" }}>{unreadCount}</span>
                         </button>
                         {showNotifs && (
-                            <div style={{ position: "absolute", bottom: "110%", left: 0, right: 0, background: theme === "dark" ? "#1a1a2e" : "#fff", border: "1px solid rgba(108,99,255,0.2)", borderRadius: 12, padding: "12px", zIndex: 200, boxShadow: "0 12px 36px rgba(0,0,0,0.4)", maxHeight: 200, overflowY: "auto" }}>
+                            <div style={{ position: "absolute", bottom: "110%", left: 0, right: 0, background: theme === "dark" ? "#1a1a2e" : "#fff", border: "1px solid rgba(108,99,255,0.2)", borderRadius: 12, padding: "12px", zIndex: 200, boxShadow: "0 12px 36px rgba(0,0,0,0.4)", maxHeight: 260, overflowY: "auto" }}>
                                 {notifications.filter((n) => !n.read).map((n, i) => (
                                     <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: "0.78rem" }}>
                                         <span style={{ fontWeight: 600 }}>{n.type === "swap" ? "⇄ Swap Request" : "💬 Message Request"}</span>
-                                        <p style={{ color: "rgba(255,255,255,0.5)", marginTop: 2 }}>from user {n.from}</p>
+                                        <p style={{ color: "rgba(255,255,255,0.5)", marginTop: 2 }}>from {n.fromName || n.from}</p>
+                                        {n.status === "pending" && (
+                                            <button
+                                                onClick={() => handleAccept(n)}
+                                                style={{ marginTop: 6, padding: "5px 14px", borderRadius: 8, border: "none", background: "linear-gradient(135deg,#6C63FF,#00c6ff)", color: "#fff", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
+                                            >
+                                                ✓ Accept
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>

@@ -163,7 +163,7 @@ const navB = (isDark) => ({ width: 24, height: 24, borderRadius: "50%", border: 
 /* ── MAIN MESSAGES PAGE ── */
 export default function Messages() {
   const { theme, user: authUser, isInNetwork } = useAuth();
-  const { isOnline, sendMessage: socketSend, sendTyping, addMessageListener, sendSwapRequest, sendMessageRequest } = useSocket() || {};
+  const { isOnline, sendMessage: socketSend, sendTyping, addMessageListener, addBlockedListener, sendSwapRequest, sendMessageRequest } = useSocket() || {};
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const openUserId = params.get("user");
@@ -176,6 +176,7 @@ export default function Messages() {
   const [searchQ, setSearchQ] = useState("");
   const [typing, setTyping] = useState(false);
   const [requestSent, setRequestSent] = useState({});
+  const [blockedUsers, setBlockedUsers] = useState({});
   const [showMeetPanel, setShowMeetPanel] = useState(false);
   const [selectedUserModal, setSelectedUserModal] = useState(null);
   const messagesEndRef = useRef(null);
@@ -277,6 +278,27 @@ export default function Messages() {
     return remove;
   }, [addMessageListener, authUser, findUser]);
 
+  /* Socket: message_blocked — roll back optimistic message and flag the user as blocked */
+  useEffect(() => {
+    if (!addBlockedListener) return;
+    const remove = addBlockedListener(({ from, to, reason }) => {
+      // Remove optimistic message (last message from me to that user)
+      const partnerId = to;
+      setConvs((cs) => cs.map((c) =>
+        c.userId === partnerId
+          ? { ...c, messages: c.messages.slice(0, -1), lastMsg: c.messages.at(-2)?.text || "No messages yet", time: c.messages.at(-2)?.time || "" }
+          : c
+      ));
+      setSelected((s) => {
+        if (!s || s.userId !== partnerId) return s;
+        const msgs = s.messages.slice(0, -1);
+        return { ...s, messages: msgs, lastMsg: msgs.at(-1)?.text || "", time: msgs.at(-1)?.time || "" };
+      });
+      setBlockedUsers((b) => ({ ...b, [partnerId]: reason }));
+    });
+    return remove;
+  }, [addBlockedListener]);
+
   /* Scroll to bottom */
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -324,7 +346,8 @@ export default function Messages() {
     setRequestSent((r) => ({ ...r, [targetUser.id]: "swap" }));
   };
 
-  const canMessage = selected ? isInNetwork(selected.userId) : false;
+  const isBlocked = selected ? !!blockedUsers[selected.userId] : false;
+  const canMessage = selected ? (isInNetwork(selected.userId) && !isBlocked) : false;
   const contactsForModal = allUsers.filter(
     (u) => u.id !== authUser?.id && !convs.some((c) => c.userId === u.id) &&
       u.name.toLowerCase().includes(searchQ.toLowerCase())
@@ -489,6 +512,14 @@ export default function Messages() {
                 <button style={{ width: 44, height: 44, borderRadius: 12, border: "none", background: "linear-gradient(135deg,#6C63FF,#00c6ff)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }} onClick={handleSend}>
                   <Send size={17} />
                 </button>
+              </div>
+            ) : isBlocked ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px", borderRadius: 12, background: "rgba(231,76,60,0.06)", border: "1px solid rgba(231,76,60,0.25)" }}>
+                <Lock size={18} color="#e74c3c" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 600, fontSize: "0.88rem", marginBottom: 3, color: "#e74c3c" }}>User has removed you from connection</p>
+                  <p style={{ fontSize: "0.78rem", color: muted }}>You can no longer send messages to this user.</p>
+                </div>
               </div>
             ) : (
               <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px", borderRadius: 12, background: "rgba(245,197,24,0.05)", border: "1px solid rgba(245,197,24,0.18)" }}>

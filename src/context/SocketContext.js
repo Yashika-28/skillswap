@@ -12,6 +12,7 @@ export function SocketProvider({ children }) {
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [notifications, setNotifications] = useState([]);
     const [, setMessageListeners] = useState([]);
+    const [, setBlockedListeners] = useState([]);
 
     useEffect(() => {
         if (!user) {
@@ -39,6 +40,14 @@ export function SocketProvider({ children }) {
         s.on("new_message", (data) => {
             // Notify all registered message listeners
             setMessageListeners((listeners) => {
+                listeners.forEach((fn) => fn(data));
+                return listeners;
+            });
+        });
+
+        s.on("message_blocked", (data) => {
+            // Notify all registered blocked listeners
+            setBlockedListeners((listeners) => {
                 listeners.forEach((fn) => fn(data));
                 return listeners;
             });
@@ -94,6 +103,11 @@ export function SocketProvider({ children }) {
         return () => setMessageListeners((prev) => prev.filter((f) => f !== fn));
     }, []);
 
+    const addBlockedListener = useCallback((fn) => {
+        setBlockedListeners((prev) => [...prev, fn]);
+        return () => setBlockedListeners((prev) => prev.filter((f) => f !== fn));
+    }, []);
+
     const isOnline = useCallback((userId) => onlineUsers.includes(userId), [onlineUsers]);
 
     const clearNotification = useCallback((id) => {
@@ -112,6 +126,7 @@ export function SocketProvider({ children }) {
             sendMessageRequest,
             acceptRequest,
             addMessageListener,
+            addBlockedListener,
             clearNotification,
         }}>
             {children}

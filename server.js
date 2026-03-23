@@ -191,6 +191,15 @@ io.on("connection", (socket) => {
     });
 
     socket.on("send_message", ({ from, to, text }) => {
+        // Block messaging if users are not connected
+        const fromConns = connections[from] || new Set();
+        const toConns = connections[to] || new Set();
+        if (!fromConns.has(to) || !toConns.has(from)) {
+            const sid = onlineUsers[from];
+            if (sid) io.to(sid).emit("message_blocked", { from, to, reason: "User has removed you from connection" });
+            return;
+        }
+
         const cid = convId(from, to);
         if (!messages[cid]) messages[cid] = [];
         const now = new Date();
@@ -210,14 +219,19 @@ io.on("connection", (socket) => {
     });
 
     socket.on("swap_request", ({ from, to, offer, want }) => {
-        const req = { id: `req_${Date.now()}`, from, to, offer, want, type: "swap", status: "pending", createdAt: Date.now() };
+        const fromUser = Object.values(USERS).find(u => u.id === from);
+        const fromName = fromUser ? fromUser.name : from;
+        const req = { id: `req_${Date.now()}`, from, to, fromName, offer, want, type: "swap", status: "pending", createdAt: Date.now() };
         requests.push(req);
         const sid = onlineUsers[to];
         if (sid) io.to(sid).emit("incoming_request", req);
     });
 
     socket.on("message_request", ({ from, to }) => {
-        const req = { id: `req_${Date.now()}`, from, to, type: "message", status: "pending", createdAt: Date.now() };
+        // Look up sender's name from USERS
+        const fromUser = Object.values(USERS).find(u => u.id === from);
+        const fromName = fromUser ? fromUser.name : from;
+        const req = { id: `req_${Date.now()}`, from, to, fromName, type: "message", status: "pending", createdAt: Date.now() };
         requests.push(req);
         const sid = onlineUsers[to];
         if (sid) io.to(sid).emit("incoming_request", req);
